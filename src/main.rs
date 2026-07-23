@@ -57,32 +57,45 @@ fn setup(
 }
 
 fn player_movement(
-    kb_input: Res<ButtonInput<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut player_query: Query<&mut Transform, With<Player>>
-){
+    mut player_query: Query<&mut Transform, With<Player>>,
+) {
     let Ok(mut transform) = player_query.single_mut() else {
         return;
     };
 
-    let mut direction = Vec3::ZERO;
+    let mut input_direction = Vec3::ZERO;
 
-    if kb_input.pressed(KeyCode::KeyW) {
-        direction.z -= 1.0;
+    if keyboard_input.pressed(KeyCode::KeyW) {
+        input_direction.z -= 1.0;
     }
-    if kb_input.pressed(KeyCode::KeyA) {
-        direction.x -= 1.0;
+
+    if keyboard_input.pressed(KeyCode::KeyS) {
+        input_direction.z += 1.0;
     }
-    if kb_input.pressed(KeyCode::KeyS) {
-        direction.z += 1.0;
+
+    if keyboard_input.pressed(KeyCode::KeyA) {
+        input_direction.x -= 1.0;
     }
-    if kb_input.pressed(KeyCode::KeyD) {
-        direction.x += 1.0;
+
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        input_direction.x += 1.0;
     }
+
+    let forward = transform.rotation * Vec3::NEG_Z;
+    let right = transform.rotation * Vec3::X;
+
+    let forward = Vec3::new(forward.x, 0.0, forward.z).normalize_or_zero();
+    let right = Vec3::new(right.x, 0.0, right.z).normalize_or_zero();
+
+    let movement_direction =
+        forward * -input_direction.z + right * input_direction.x;
 
     let movement_speed = 5.0;
 
     transform.translation +=
-        direction.normalize_or_zero() * movement_speed * time.delta_secs();
-    
+        movement_direction.normalize_or_zero()
+            * movement_speed
+            * time.delta_secs();
 }
